@@ -1,6 +1,6 @@
 'use strict'
 
-function Acels (client) {
+export function Acels () {
   this.all = {}
   this.roles = {}
   this.pipe = null
