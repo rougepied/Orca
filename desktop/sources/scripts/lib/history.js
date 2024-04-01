@@ -1,6 +1,6 @@
 //@ts-check
 
-import { clamp } from "../clamp";
+import { clamp } from "../clamp.js";
 
 export class History {
   constructor() {

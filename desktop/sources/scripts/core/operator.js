@@ -2,27 +2,71 @@
 
 import { clamp } from "../clamp.js";
 
+/**
+ * @typedef {Object} Ports
+ * @property {*} [x]
+ * @property {*} [y]
+ * @property {*} [a]
+ * @property {*} [b]
+ * @property {*} [default]
+ * @property {*} [rate]
+ * @property {*} [min]
+ * @property {*} [max]
+ * @property {*} [mod]
+ * @property {*} [len]
+ * @property {*} [key]
+ * @property {*} [read]
+ * @property {*} [write]
+ * @property {*} [val]
+ * @property {*} [step]
+ * @property {*} [clamp]
+ * @property {*} [output]
+ * @property {*} [target]
+ * // properties for ":"
+ * @property {*} [channel]
+ * @property {*} [length]
+ * @property {*} [octave]
+ * @property {*} [note]
+ * @property {*} [velocity]
+ * // property for "!" ie CC
+ * @property {*} [value]
+ * @property {*} [knob]
+ *
+ * @property {*} [lsb]
+ * @property {*} [msb]
+ *
+ * @property {*} [path]
+ */
+
 export class Operator {
+  name = "unknown";
+  info = "--";
+  /** @type {Ports} */
+  ports;
+
   /**
-   * @param {import("./orca.js").Orca} orca
-   * @param {*} x
-   * @param {*} y
-   * @param {*} glyph
-   * @param {*} passive
+   * @param {import("./orca").Orca} orca
+   * @param {*} x x coordinate of the Operator
+   * @param {*} y y coordinate of the Operator
+   * @param {string} glyph string representation of the Operator
+   * @param {boolean} passive
    */
   constructor(orca, x, y, glyph = ".", passive = false) {
     this.orca = orca;
-    this.name = "unknown";
     this.x = x;
     this.y = y;
     this.passive = passive;
     this.draw = passive;
     this.glyph = passive ? glyph.toUpperCase() : glyph;
-    this.info = "--";
     this.ports = {};
   }
 
   // Actions
+  /**
+   * @param {Ports} port
+   * @param {*} toValue
+   * @returns
+   */
   listen(port, toValue = false) {
     if (!port) {
       return toValue ? 0 : ".";

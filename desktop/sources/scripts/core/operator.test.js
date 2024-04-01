@@ -1,8 +1,8 @@
-import { describe, expect, test, vi } from "vitest";
-import { Operator } from "./operator";
+import { beforeEach, describe, expect, it, test, vi } from "vitest";
+import { Operator } from "./operator.js";
 
 describe("Operator#listen", () => {
-  test("Operator#listen with no port", () => {
+  it(`return "." or 0 with no port`, () => {
     const orca = /** @type {import("./orca.js").Orca} */ ({ keyOf: () => {} });
     const x = null;
     const y = null;

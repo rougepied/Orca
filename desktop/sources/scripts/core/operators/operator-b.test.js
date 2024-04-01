@@ -1,25 +1,24 @@
-import { OperatorA } from "./operator-a.js";
-
 import { test, vi, expect } from "vitest";
+import { OperatorB } from "./operator-b.js";
 
-test("OperatorA#operation", () => {
+test("OperatorB#operation", () => {
   const orca = /** @type {import("../orca.js").Orca} */ ({ keyOf: () => {} });
   const x = null;
   const y = null;
   const passive = true;
-  const operator = new OperatorA(orca, x, y, passive);
+  const operator = new OperatorB(orca, x, y, passive);
 
-  const a = 2;
+  const a = 5;
   const b = 3;
 
   const spyListen = vi
     .spyOn(operator, "listen")
     .mockImplementationOnce(() => a)
-    .mockImplementationOnce(() => 3);
+    .mockImplementationOnce(() => b);
   const spyKeyOf = vi.spyOn(orca, "keyOf");
 
   const result = operator.operation();
   expect(spyListen).toHaveBeenCalledWith(operator.ports.a, true);
   expect(spyListen).toHaveBeenCalledWith(operator.ports.b, true);
-  expect(spyKeyOf).toHaveBeenCalledWith(5);
+  expect(spyKeyOf).toHaveBeenCalledWith(a - b);
 });

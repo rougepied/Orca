@@ -149,7 +149,7 @@ export class Clock {
       this.isPuppet = true;
       this.clearTimer();
       this.pulse.timer = window.setInterval(() => {
-        const last = /** @type {Number} */ (this.pulse.last);
+        const last = /** @type {number} */ (this.pulse.last);
         if (performance.now() - last < 2000) {
           return;
         }
@@ -171,7 +171,7 @@ export class Clock {
 
   untap() {
     console.log("Clock", "Puppeteering stops..");
-    clearInterval(/** @type {Number} */ (this.pulse.timer));
+    clearInterval(/** @type {number} */ (this.pulse.timer));
     this.isPuppet = false;
     this.pulse.frame = 0;
     this.pulse.last = null;

@@ -1,23 +1,28 @@
 //@ts-check
 import { Client } from "../client.js";
-import { library } from "./library/library.js";
+import { library } from "./library.js";
 
 export class Orca {
+  keys = "0123456789abcdefghijklmnopqrstuvwxyz".split("");
+
+  /**
+   * Default Width
+   * @type {number}
+   */
+  w = 1; // Default Width
+  h = 1; // Default Height
+  f = 0; // Frame
+  s = ""; // String
+
+  locks = [];
+  runtime = [];
+  variables = {};
+
   /**
    * @param {Client} client
    */
   constructor(client) {
     this.client = client;
-    this.keys = "0123456789abcdefghijklmnopqrstuvwxyz".split("");
-
-    this.w = 1; // Default Width
-    this.h = 1; // Default Height
-    this.f = 0; // Frame
-    this.s = ""; // String
-
-    this.locks = [];
-    this.runtime = [];
-    this.variables = {};
 
     this.reset();
   }
