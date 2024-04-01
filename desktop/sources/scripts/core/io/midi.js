@@ -1,5 +1,6 @@
 //@ts-check
 
+import { clamp } from "../../clamp.js";
 import { transposeTable } from "../transpose.js";
 
 export class Midi {
@@ -339,8 +340,4 @@ export class Midi {
   length() {
     return this.stack.length;
   }
-}
-
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

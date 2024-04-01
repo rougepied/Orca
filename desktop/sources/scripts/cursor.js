@@ -1,5 +1,7 @@
 //@ts-check
 
+import { clamp } from "./clamp";
+
 export class Cursor {
   client;
   x = 0;
@@ -32,12 +34,8 @@ export class Cursor {
   }
 
   select(x = this.x, y = this.y, w = this.w, h = this.h) {
-    if (
-      Number.isNaN(x) ||
-      Number.isNaN(y) ||
-      Number.isNaN(w) ||
-      Number.isNaN(h)
-    ) {
+    // biome-ignore lint/suspicious/noGlobalIsNan: <explanation>
+    if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
       return;
     }
     const rect = {
@@ -288,8 +286,4 @@ export class Cursor {
     );
     e.preventDefault();
   }
-}
-
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

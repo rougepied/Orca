@@ -10,6 +10,7 @@ import { IO } from "./core/io.js";
 import { Commander } from "./commander.js";
 import { Cursor } from "./cursor.js";
 import { Clock } from "./clock.js";
+import { clamp } from "./clamp.js";
 
 export class Client {
   theme;
@@ -883,7 +884,4 @@ function display(str, f, max) {
   return str.length < max
     ? str
     : str.slice(f % str.length) + str.substr(0, f % str.length);
-}
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

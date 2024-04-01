@@ -1,5 +1,6 @@
 //@ts-check
 
+import { clamp } from "../clamp.js";
 import { Orca } from "./orca.js";
 
 export class Operator {
@@ -182,9 +183,4 @@ export class Operator {
     }
     return true;
   }
-}
-
-// Docs
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

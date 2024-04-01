@@ -1,5 +1,7 @@
 //@ts-check
 
+import { clamp } from "./clamp.js";
+
 export class Clock {
   client;
   isPaused = true;
@@ -219,8 +221,4 @@ export class Clock {
     const _beat = diff === 0 && this.client.orca.f % 4 === 0 ? "*" : "";
     return `${_message}${_beat}`;
   }
-}
-
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

@@ -1,5 +1,7 @@
 //@ts-check
 
+import { clamp } from "./clamp.js";
+
 export class Commander {
   client;
   isActive = false;
@@ -274,9 +276,4 @@ function Param(val) {
   this._str = this.parts[0];
   this._x = Number.parseInt(this.parts[1]);
   this._y = Number.parseInt(this.parts[2]);
-}
-
-// Utils
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }

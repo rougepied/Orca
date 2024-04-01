@@ -1,5 +1,7 @@
 //@ts-check
 
+import { clamp } from "../clamp";
+
 export class History {
   constructor() {
     this.index = 0;
@@ -88,8 +90,4 @@ export class History {
   length() {
     return this.frames.length;
   }
-}
-
-function clamp(v, min, max) {
-  return v < min ? min : v > max ? max : v;
 }
