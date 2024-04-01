@@ -1,55 +1,64 @@
-'use strict'
+//@ts-check
 
-function Mono (client) {
-  this.stack = {}
+export class Mono {
+  stack = [];
+  client;
 
-  this.start = function () {
-    console.info('MidiMono Starting..')
+  constructor(client) {
+    this.client = client;
   }
 
-  this.clear = function () {
-
+  start() {
+    console.info("MidiMono Starting..");
   }
 
-  this.run = function () {
+  clear() {}
+
+  run() {
     for (const id in this.stack) {
       if (this.stack[id].length < 1) {
-        this.release(this.stack[id], id)
+        this.release(this.stack[id]);
       }
-      if (!this.stack[id]) { continue }
+      if (!this.stack[id]) {
+        continue;
+      }
       if (this.stack[id].isPlayed === false) {
-        this.press(this.stack[id])
+        this.press(this.stack[id]);
       }
-      this.stack[id].length--
+      this.stack[id].length--;
     }
   }
 
-  this.press = function (item) {
-    if (!item) { return }
-    client.io.midi.trigger(item, true)
-    item.isPlayed = true
+  press(item) {
+    if (!item) {
+      return;
+    }
+    this.client.io.midi.trigger(item, true);
+    item.isPlayed = true;
   }
 
-  this.release = function (item) {
-    if (!item) { return }
-    client.io.midi.trigger(item, false)
-    delete this.stack[item.channel]
+  release(item) {
+    if (!item) {
+      return;
+    }
+    this.client.io.midi.trigger(item, false);
+    delete this.stack[item.channel];
   }
 
-  this.silence = function () {
+  silence() {
     for (const item of this.stack) {
-      this.release(item)
+      this.release(item);
     }
   }
 
-  this.push = function (channel, octave, note, velocity, length, isPlayed = false) {
+  push(channel, octave, note, velocity, length, isPlayed = false) {
     if (this.stack[channel]) {
-      this.release(this.stack[channel])
+      this.release(this.stack[channel]);
     }
-    this.stack[channel] = { channel, octave, note, velocity, length, isPlayed }
+    this.stack[channel] = { channel, octave, note, velocity, length, isPlayed };
   }
 
-  this.length = function () {
-    return Object.keys(this.stack).length
+  length() {
+    return Object.keys(this.stack).length;
   }
 }

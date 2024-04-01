@@ -1,98 +1,117 @@
-'use strict'
+//@ts-check
 
-function Acels (client) {
-  this.all = {}
-  this.roles = {}
-  this.pipe = null
+export function Acels() {
+  this.all = {};
+  this.roles = {};
+  this.pipe = null;
 
   this.install = (host = window) => {
-    host.addEventListener('keydown', this.onKeyDown, false)
-    host.addEventListener('keyup', this.onKeyUp, false)
-  }
+    host.addEventListener("keydown", this.onKeyDown, false);
+    host.addEventListener("keyup", this.onKeyUp, false);
+  };
 
   this.set = (cat, name, accelerator, downfn, upfn) => {
-    if (this.all[accelerator]) { console.warn('Acels', `Trying to overwrite ${this.all[accelerator].name}, with ${name}.`) }
-    this.all[accelerator] = { cat, name, downfn, upfn, accelerator }
-  }
+    if (this.all[accelerator]) {
+      console.warn(
+        "Acels",
+        `Trying to overwrite ${this.all[accelerator].name}, with ${name}.`,
+      );
+    }
+    this.all[accelerator] = { cat, name, downfn, upfn, accelerator };
+  };
 
   this.add = (cat, role) => {
-    this.all[':' + role] = { cat, name: role, role }
-  }
+    this.all[`:${role}`] = { cat, name: role, role };
+  };
 
   this.get = (accelerator) => {
-    return this.all[accelerator]
-  }
+    return this.all[accelerator];
+  };
 
   this.sort = () => {
-    const h = {}
+    const h = {};
     for (const item of Object.values(this.all)) {
-      if (!h[item.cat]) { h[item.cat] = [] }
-      h[item.cat].push(item)
+      if (!h[item.cat]) {
+        h[item.cat] = [];
+      }
+      h[item.cat].push(item);
     }
-    return h
-  }
+    return h;
+  };
 
   this.convert = (event) => {
-    const accelerator = event.key === ' ' ? 'Space' : event.key.substr(0, 1).toUpperCase() + event.key.substr(1)
+    const accelerator =
+      event.key === " "
+        ? "Space"
+        : event.key.substr(0, 1).toUpperCase() + event.key.substr(1);
     if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
-      return `CmdOrCtrl+Shift+${accelerator}`
+      return `CmdOrCtrl+Shift+${accelerator}`;
     }
     if (event.shiftKey && event.key.toUpperCase() !== event.key) {
-      return `Shift+${accelerator}`
+      return `Shift+${accelerator}`;
     }
     if (event.altKey && event.key.length !== 1) {
-      return `Alt+${accelerator}`
+      return `Alt+${accelerator}`;
     }
     if (event.ctrlKey || event.metaKey) {
-      return `CmdOrCtrl+${accelerator}`
+      return `CmdOrCtrl+${accelerator}`;
     }
-    return accelerator
-  }
+    return accelerator;
+  };
 
   this.pipe = (obj) => {
-    this.pipe = obj
-  }
+    this.pipe = obj;
+  };
 
   this.onKeyDown = (e) => {
-    const target = this.get(this.convert(e))
-    if (!target || !target.downfn) { return this.pipe ? this.pipe.onKeyDown(e) : null }
-    target.downfn()
-    e.preventDefault()
-  }
+    const target = this.get(this.convert(e));
+    if (!target || !target.downfn) {
+      return this.pipe ? this.pipe.onKeyDown(e) : null;
+    }
+    target.downfn();
+    e.preventDefault();
+  };
 
   this.onKeyUp = (e) => {
-    const target = this.get(this.convert(e))
-    if (!target || !target.upfn) { return this.pipe ? this.pipe.onKeyUp(e) : null }
-    target.upfn()
-    e.preventDefault()
-  }
+    const target = this.get(this.convert(e));
+    if (!target || !target.upfn) {
+      return this.pipe ? this.pipe.onKeyUp(e) : null;
+    }
+    target.upfn();
+    e.preventDefault();
+  };
 
   this.toMarkdown = () => {
-    const cats = this.sort()
-    let text = ''
+    const cats = this.sort();
+    let text = "";
     for (const cat in cats) {
-      text += `\n### ${cat}\n\n`
+      text += `\n### ${cat}\n\n`;
       for (const item of cats[cat]) {
-        text += item.accelerator ? `- \`${item.accelerator.replace('`', 'tilde')}\`: ${item.name}\n` : ''
+        text += item.accelerator
+          ? `- \`${item.accelerator.replace("`", "tilde")}\`: ${item.name}\n`
+          : "";
       }
     }
-    return text.trim()
-  }
+    return text.trim();
+  };
 
   this.toString = () => {
-    const cats = this.sort()
-    let text = ''
+    const cats = this.sort();
+    let text = "";
     for (const cat in cats) {
-      text += `\n${cat}\n\n`
+      text += `\n${cat}\n\n`;
       for (const item of cats[cat]) {
-        text += item.accelerator ? `${item.name.padEnd(25, '.')} ${item.accelerator}\n` : ''
+        text += item.accelerator
+          ? `${item.name.padEnd(25, ".")} ${item.accelerator}\n`
+          : "";
       }
     }
-    return text.trim()
-  }
+    return text.trim();
+  };
 
+  // See later how to replace electron with Tauri
+  /*
   // Electron specifics
-
   this.inject = (name = 'Untitled') => {
     const app = require('electron').remote.app
     const injection = []
@@ -133,4 +152,5 @@ function Acels (client) {
     }
     app.injectMenu(injection)
   }
+*/
 }

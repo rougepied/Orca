@@ -1,175 +1,282 @@
-'use strict'
+//@ts-check
 
-function Commander (client) {
-  this.isActive = false
-  this.query = ''
-  this.history = []
-  this.historyIndex = 0
+export class Commander {
+  client;
+  isActive = false;
+  query = "";
+  history = [];
+  historyIndex = 0;
 
-  // Library
+  constructor(client) {
+    this.client = client;
 
-  this.passives = {
-    find: (p) => { client.cursor.find(p.str) },
-    select: (p) => { client.cursor.select(p.x, p.y, p.w || 0, p.h || 0) },
-    inject: (p) => {
-      client.cursor.select(p._x, p._y)
-      if (client.source.cache[p._str + '.orca']) {
-        const block = client.source.cache[p._str + '.orca']
-        const rect = client.orca.toRect(block)
-        client.cursor.scaleTo(rect.x, rect.y)
-      }
+    this.passives = {
+      find: (p) => {
+        this.client.cursor.find(p.str);
+      },
+      select: (p) => {
+        this.client.cursor.select(p.x, p.y, p.w || 0, p.h || 0);
+      },
+      inject: (p) => {
+        this.client.cursor.select(p._x, p._y);
+        if (this.client.source.cache[`${p._str}.orca`]) {
+          const block = this.client.source.cache[`${p._str}.orca`];
+          const rect = this.client.orca.toRect(block);
+          this.client.cursor.scaleTo(rect.x, rect.y);
+        }
+      },
+    };
+
+    this.actives = {
+      // Ports
+      osc: (p) => {
+        this.client.io.osc.select(p.int);
+      },
+      udp: (p) => {
+        this.client.io.udp.selectOutput(p.x);
+        if (p.y !== null) {
+          this.client.io.udp.selectInput(p.y);
+        }
+      },
+      midi: (p) => {
+        this.client.io.midi.selectOutput(p.x);
+        if (p.y !== null) {
+          this.client.io.midi.selectInput(p.y);
+        }
+      },
+      ip: (p) => {
+        this.client.io.setIp(p.str);
+      },
+      cc: (p) => {
+        this.client.io.cc.setOffset(p.int);
+      },
+      pg: (p) => {
+        this.client.io.cc.stack.push({
+          channel: clamp(p.ints[0], 0, 15),
+          bank: p.ints[1],
+          sub: p.ints[2],
+          pgm: clamp(p.ints[3], 0, 127),
+          type: "pg",
+        });
+        this.client.io.cc.run();
+      },
+      // Cursor
+      copy: (p) => {
+        this.client.cursor.copy();
+      },
+      paste: (p) => {
+        this.client.cursor.paste(true);
+      },
+      erase: (p) => {
+        this.client.cursor.erase();
+      },
+      // Controls
+      play: (p) => {
+        this.client.clock.play();
+      },
+      stop: (p) => {
+        this.client.clock.stop();
+      },
+      run: (p) => {
+        this.client.run();
+      },
+      // Time
+      apm: (p) => {
+        this.client.clock.setSpeed(null, p.int);
+      },
+      bpm: (p) => {
+        this.client.clock.setSpeed(p.int, p.int, true);
+      },
+      frame: (p) => {
+        this.client.clock.setFrame(p.int);
+      },
+      rewind: (p) => {
+        this.client.clock.setFrame(this.client.orca.f - p.int);
+      },
+      skip: (p) => {
+        this.client.clock.setFrame(this.client.orca.f + p.int);
+      },
+      time: (p, origin) => {
+        const formatted = new Date(
+          250 * (this.client.orca.f * (60 / this.client.clock.speed.value)),
+        )
+          .toISOString()
+          .substr(14, 5)
+          .replace(/:/g, "");
+        this.client.orca.writeBlock(
+          origin ? origin.x : this.client.cursor.x,
+          origin ? origin.y : this.client.cursor.y,
+          `${formatted}`,
+        );
+      },
+      // Themeing
+      color: (p) => {
+        if (p.parts[0]) {
+          this.client.theme.set("b_low", p.parts[0]);
+        }
+        if (p.parts[1]) {
+          this.client.theme.set("b_med", p.parts[1]);
+        }
+        if (p.parts[2]) {
+          this.client.theme.set("b_high", p.parts[2]);
+        }
+      },
+      // Edit
+      find: (p) => {
+        this.client.cursor.find(p.str);
+      },
+      select: (p) => {
+        this.client.cursor.select(p.x, p.y, p.w || 0, p.h || 0);
+      },
+      inject: (p, origin) => {
+        const block = this.client.source.cache[`${p._str}.orca`];
+        if (!block) {
+          console.warn("Commander", `Unknown block: ${p._str}`);
+          return;
+        }
+        this.client.orca.writeBlock(
+          origin ? origin.x : this.client.cursor.x,
+          origin ? origin.y : this.client.cursor.y,
+          block,
+        );
+        this.client.cursor.scaleTo(0, 0);
+      },
+      write: (p) => {
+        this.client.orca.writeBlock(
+          p._x || this.client.cursor.x,
+          p._y || this.client.cursor.y,
+          p._str,
+        );
+      },
+    };
+
+    // Make shorthands
+    for (const id in this.actives) {
+      this.actives[id.substr(0, 2)] = this.actives[id];
     }
-  }
-
-  this.actives = {
-    // Ports
-    osc: (p) => { client.io.osc.select(p.int) },
-    udp: (p) => {
-      client.io.udp.selectOutput(p.x)
-      if (p.y !== null) { client.io.udp.selectInput(p.y) }
-    },
-    midi: (p) => {
-      client.io.midi.selectOutput(p.x)
-      if (p.y !== null) { client.io.midi.selectInput(p.y) }
-    },
-    ip: (p) => { client.io.setIp(p.str) },
-    cc: (p) => { client.io.cc.setOffset(p.int) },
-    pg: (p) => { client.io.cc.stack.push({ channel: clamp(p.ints[0], 0, 15), bank: p.ints[1], sub: p.ints[2], pgm: clamp(p.ints[3], 0, 127), type: 'pg' }); client.io.cc.run() },
-    // Cursor
-    copy: (p) => { client.cursor.copy() },
-    paste: (p) => { client.cursor.paste(true) },
-    erase: (p) => { client.cursor.erase() },
-    // Controls
-    play: (p) => { client.clock.play() },
-    stop: (p) => { client.clock.stop() },
-    run: (p) => { client.run() },
-    // Time
-    apm: (p) => { client.clock.setSpeed(null, p.int) },
-    bpm: (p) => { client.clock.setSpeed(p.int, p.int, true) },
-    frame: (p) => { client.clock.setFrame(p.int) },
-    rewind: (p) => { client.clock.setFrame(client.orca.f - p.int) },
-    skip: (p) => { client.clock.setFrame(client.orca.f + p.int) },
-    time: (p, origin) => {
-      const formatted = new Date(250 * (client.orca.f * (60 / client.clock.speed.value))).toISOString().substr(14, 5).replace(/:/g, '')
-      client.orca.writeBlock(origin ? origin.x : client.cursor.x, origin ? origin.y : client.cursor.y, `${formatted}`)
-    },
-    // Themeing
-    color: (p) => {
-      if (p.parts[0]) { client.theme.set('b_low', p.parts[0]) }
-      if (p.parts[1]) { client.theme.set('b_med', p.parts[1]) }
-      if (p.parts[2]) { client.theme.set('b_high', p.parts[2]) }
-    },
-    // Edit
-    find: (p) => { client.cursor.find(p.str) },
-    select: (p) => { client.cursor.select(p.x, p.y, p.w || 0, p.h || 0) },
-    inject: (p, origin) => {
-      const block = client.source.cache[p._str + '.orca']
-      if (!block) { console.warn('Commander', 'Unknown block: ' + p._str); return }
-      client.orca.writeBlock(origin ? origin.x : client.cursor.x, origin ? origin.y : client.cursor.y, block)
-      client.cursor.scaleTo(0, 0)
-    },
-    write: (p) => {
-      client.orca.writeBlock(p._x || client.cursor.x, p._y || client.cursor.y, p._str)
-    }
-  }
-
-  // Make shorthands
-  for (const id in this.actives) {
-    this.actives[id.substr(0, 2)] = this.actives[id]
-  }
-
-  function Param (val) {
-    this.str = `${val}`
-    this.length = this.str.length
-    this.chars = this.str.split('')
-    this.int = !isNaN(val) ? parseInt(val) : null
-    this.parts = val.split(';')
-    this.ints = this.parts.map((val) => { return parseInt(val) })
-    this.x = parseInt(this.parts[0])
-    this.y = parseInt(this.parts[1])
-    this.w = parseInt(this.parts[2])
-    this.h = parseInt(this.parts[3])
-    // Optionals Position Style
-    this._str = this.parts[0]
-    this._x = parseInt(this.parts[1])
-    this._y = parseInt(this.parts[2])
   }
 
   // Begin
 
-  this.start = (q = '') => {
-    this.isActive = true
-    this.query = q
-    client.cursor.ins = false
-    client.update()
+  start(q = "") {
+    this.isActive = true;
+    this.query = q;
+    this.client.cursor.ins = false;
+    this.client.update();
   }
 
-  this.stop = () => {
-    this.isActive = false
-    this.query = ''
-    this.historyIndex = this.history.length
-    client.update()
+  stop() {
+    this.isActive = false;
+    this.query = "";
+    this.historyIndex = this.history.length;
+    this.client.update();
   }
 
-  this.erase = function () {
-    this.query = this.query.slice(0, -1)
-    this.preview()
+  erase() {
+    this.query = this.query.slice(0, -1);
+    this.preview();
   }
 
-  this.write = (key) => {
-    if (key === 'Backspace') { this.erase(); return }
-    if (key === 'Enter') { this.run(); return }
-    if (key === 'Escape') { this.stop(); return }
-    if (key.length > 1) { return }
-    this.query += key
-    this.preview()
+  write(key) {
+    if (key === "Backspace") {
+      this.erase();
+      return;
+    }
+    if (key === "Enter") {
+      this.run();
+      return;
+    }
+    if (key === "Escape") {
+      this.stop();
+      return;
+    }
+    if (key.length > 1) {
+      return;
+    }
+    this.query += key;
+    this.preview();
   }
 
-  this.run = function () {
-    const tool = this.isActive === true ? 'commander' : 'cursor'
-    client[tool].trigger()
-    client.update()
+  run() {
+    const tool = this.isActive === true ? "commander" : "cursor";
+    this.client[tool].trigger();
+    this.client.update();
   }
 
-  this.trigger = function (msg = this.query, origin = null, stopping = true) {
-    const cmd = `${msg}`.split(':')[0].trim().replace(/\W/g, '').toLowerCase()
-    const val = `${msg}`.substr(cmd.length + 1)
-    const fn = this.actives[cmd]
-    if (!fn) { console.warn('Commander', `Unknown message: ${msg}`); this.stop(); return }
-    fn(new Param(val), origin)
-    this.history.push(msg)
-    this.historyIndex = this.history.length
+  /**
+   * 
+   * @param {*} msg 
+   * @param {{ x: Number, y: Number } | null} origin 
+   * @param {boolean} stopping 
+   * @returns 
+   */
+  trigger(msg = this.query, origin = null, stopping = true) {
+    const cmd = `${msg}`.split(":")[0].trim().replace(/\W/g, "").toLowerCase();
+    const val = `${msg}`.substr(cmd.length + 1);
+    const fn = this.actives[cmd];
+    if (!fn) {
+      console.warn("Commander", `Unknown message: ${msg}`);
+      this.stop();
+      return;
+    }
+    fn(new Param(val), origin);
+    this.history.push(msg);
+    this.historyIndex = this.history.length;
     if (stopping) {
-      this.stop()
+      this.stop();
     }
   }
 
-  this.preview = function (msg = this.query) {
-    const cmd = `${msg}`.split(':')[0].toLowerCase()
-    const val = `${msg}`.substr(cmd.length + 1)
-    if (!this.passives[cmd]) { return }
-    this.passives[cmd](new Param(val), false)
+  preview(msg = this.query) {
+    const cmd = `${msg}`.split(":")[0].toLowerCase();
+    const val = `${msg}`.substr(cmd.length + 1);
+    if (!this.passives[cmd]) {
+      return;
+    }
+    this.passives[cmd](new Param(val), false);
   }
 
   // Events
 
-  this.onKeyDown = (e) => {
-    if (e.ctrlKey || e.metaKey) { return }
-    client[this.isActive === true ? 'commander' : 'cursor'].write(e.key)
-    e.stopPropagation()
+  onKeyDown(e) {
+    if (e.ctrlKey || e.metaKey) {
+      return;
+    }
+    this.client[this.isActive === true ? "commander" : "cursor"].write(e.key);
+    e.stopPropagation();
   }
 
-  this.onKeyUp = (e) => {
-    client.update()
+  onKeyUp(e) {
+    this.client.update();
   }
 
   // UI
 
-  this.toString = function () {
-    return `${this.query}`
+  toString() {
+    return `${this.query}`;
   }
+}
 
-  // Utils
+function Param(val) {
+  this.str = `${val}`;
+  this.length = this.str.length;
+  this.chars = this.str.split("");
+  this.int = !Number.isNaN(val) ? Number.parseInt(val) : null;
+  this.parts = val.split(";");
+  this.ints = this.parts.map((val) => {
+    return Number.parseInt(val);
+  });
+  this.x = Number.parseInt(this.parts[0]);
+  this.y = Number.parseInt(this.parts[1]);
+  this.w = Number.parseInt(this.parts[2]);
+  this.h = Number.parseInt(this.parts[3]);
+  // Optionals Position Style
+  this._str = this.parts[0];
+  this._x = Number.parseInt(this.parts[1]);
+  this._y = Number.parseInt(this.parts[2]);
+}
 
-  function clamp (v, min, max) { return v < min ? min : v > max ? max : v }
+// Utils
+function clamp(v, min, max) {
+  return v < min ? min : v > max ? max : v;
 }

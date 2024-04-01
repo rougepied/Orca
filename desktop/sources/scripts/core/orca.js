@@ -1,222 +1,268 @@
-'use strict'
+//@ts-check
+import { Client } from "../client.js";
+import { library } from "./library.js";
 
-function Orca (library) {
-  this.keys = '0123456789abcdefghijklmnopqrstuvwxyz'.split('')
+export class Orca {
+  /**
+   * @param {Client} client
+   */
+  constructor(client) {
+    this.client = client;
+    this.keys = "0123456789abcdefghijklmnopqrstuvwxyz".split("");
 
-  this.w = 1 // Default Width
-  this.h = 1 // Default Height
-  this.f = 0 // Frame
-  this.s = '' // String
+    this.w = 1; // Default Width
+    this.h = 1; // Default Height
+    this.f = 0; // Frame
+    this.s = ""; // String
 
-  this.locks = []
-  this.runtime = []
-  this.variables = {}
+    this.locks = [];
+    this.runtime = [];
+    this.variables = {};
 
-  this.run = function () {
-    this.runtime = this.parse()
-    this.operate(this.runtime)
-    this.f += 1
+    this.reset();
   }
 
-  this.reset = function (w = this.w, h = this.h) {
-    this.f = 0
-    this.w = w
-    this.h = h
-    this.replace(new Array((this.h * this.w) + 1).join('.'))
+  run() {
+    this.runtime = this.parse();
+    this.operate(this.runtime);
+    this.f += 1;
   }
 
-  this.load = function (w, h, s, f = 0) {
-    this.w = w
-    this.h = h
-    this.f = f
-    this.replace(this.clean(s))
-    return this
+  reset(w = this.w, h = this.h) {
+    this.f = 0;
+    this.w = w;
+    this.h = h;
+    this.replace(new Array(this.h * this.w + 1).join("."));
   }
 
-  this.write = function (x, y, g) {
-    if (!g) { return false }
-    if (g.length !== 1) { return false }
-    if (!this.inBounds(x, y)) { return false }
-    if (this.glyphAt(x, y) === g) { return false }
-    const index = this.indexAt(x, y)
-    const glyph = !this.isAllowed(g) ? '.' : g
-    const string = this.s.substr(0, index) + glyph + this.s.substr(index + 1)
-    this.replace(string)
-    return true
+  load(w, h, s, f = 0) {
+    this.w = w;
+    this.h = h;
+    this.f = f;
+    this.replace(this.clean(s));
+    return this;
   }
 
-  this.clean = (str) => {
-    return `${str}`.replace(/\n/g, '').trim().substr(0, this.w * this.h).split('').map((g) => {
-      return !this.isAllowed(g) ? '.' : g
-    }).join('')
+  write(x, y, g) {
+    if (!g) {
+      return false;
+    }
+    if (g.length !== 1) {
+      return false;
+    }
+    if (!this.inBounds(x, y)) {
+      return false;
+    }
+    if (this.glyphAt(x, y) === g) {
+      return false;
+    }
+    const index = this.indexAt(x, y);
+    const glyph = !this.isAllowed(g) ? "." : g;
+    const string = this.s.substr(0, index) + glyph + this.s.substr(index + 1);
+    this.replace(string);
+    return true;
   }
 
-  this.replace = function (s) {
-    this.s = s
+  clean(str) {
+    return `${str}`
+      .replace(/\n/g, "")
+      .trim()
+      .substr(0, this.w * this.h)
+      .split("")
+      .map((g) => {
+        return !this.isAllowed(g) ? "." : g;
+      })
+      .join("");
+  }
+
+  replace(s) {
+    this.s = s;
   }
 
   // Operators
-
-  this.parse = function () {
-    const a = []
+  parse() {
+    const a = [];
     for (let y = 0; y < this.h; y++) {
       for (let x = 0; x < this.w; x++) {
-        const g = this.glyphAt(x, y)
-        if (g === '.' || !this.isAllowed(g)) { continue }
-        a.push(new library[g.toLowerCase()](this, x, y, g === g.toUpperCase()))
+        const g = this.glyphAt(x, y);
+        if (g === "." || !this.isAllowed(g)) {
+          continue;
+        }
+        a.push(new library[g.toLowerCase()](this, x, y, g === g.toUpperCase()));
       }
     }
-    return a
+    return a;
   }
 
-  this.operate = function (operators) {
-    this.release()
+  operate(operators) {
+    this.release();
     for (const operator of operators) {
-      if (this.lockAt(operator.x, operator.y)) { continue }
-      if (operator.passive || operator.hasNeighbor('*')) {
-        operator.run()
+      if (this.lockAt(operator.x, operator.y)) {
+        continue;
+      }
+      if (operator.passive || operator.hasNeighbor("*")) {
+        operator.run();
       }
     }
   }
 
-  this.bounds = function () {
-    let w = 0
-    let h = 0
+  bounds() {
+    let w = 0;
+    let h = 0;
     for (let y = 0; y < this.h; y++) {
       for (let x = 0; x < this.w; x++) {
-        const g = this.glyphAt(x, y)
-        if (g !== '.') {
-          if (x > w) { w = x }
-          if (y > h) { h = y }
+        const g = this.glyphAt(x, y);
+        if (g !== ".") {
+          if (x > w) {
+            w = x;
+          }
+          if (y > h) {
+            h = y;
+          }
         }
       }
     }
-    return { w, h }
+    return { w, h };
   }
 
   // Blocks
-
-  this.getBlock = (x, y, w, h) => {
-    let lines = ''
+  getBlock(x, y, w, h) {
+    let lines = "";
     for (let _y = y; _y < y + h; _y++) {
-      let line = ''
+      let line = "";
       for (let _x = x; _x < x + w; _x++) {
-        line += this.glyphAt(_x, _y)
+        line += this.glyphAt(_x, _y);
       }
-      lines += line + '\n'
+      lines += `${line}\n`;
     }
-    return lines
+    return lines;
   }
 
-  this.writeBlock = (x, y, block, overlap = false) => {
-    if (!block) { return }
-    const lines = block.split(/\r?\n/)
-    let _y = y
+  writeBlock(x, y, block, overlap = false) {
+    if (!block) {
+      return;
+    }
+    const lines = block.split(/\r?\n/);
+    let _y = y;
     for (const line of lines) {
-      let _x = x
+      let _x = x;
       for (const y in line) {
-        const glyph = line[y]
-        this.write(_x, _y, overlap === true && glyph === '.' ? this.glyphAt(_x, _y) : glyph)
-        _x++
+        const glyph = line[y];
+        this.write(
+          _x,
+          _y,
+          overlap === true && glyph === "." ? this.glyphAt(_x, _y) : glyph,
+        );
+        _x++;
       }
-      _y++
+      _y++;
     }
   }
 
   // Locks
-
-  this.release = function () {
-    this.locks = new Array(this.w * this.h)
-    this.variables = {}
+  release() {
+    this.locks = new Array(this.w * this.h);
+    this.variables = {};
   }
 
-  this.unlock = function (x, y) {
-    this.locks[this.indexAt(x, y)] = null
+  unlock(x, y) {
+    this.locks[this.indexAt(x, y)] = null;
   }
 
-  this.lock = function (x, y) {
-    if (this.lockAt(x, y)) { return }
-    this.locks[this.indexAt(x, y)] = true
+  lock(x, y) {
+    if (this.lockAt(x, y)) {
+      return;
+    }
+    this.locks[this.indexAt(x, y)] = true;
   }
 
   // Helpers
-
-  this.inBounds = function (x, y) {
-    return Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < this.w && y >= 0 && y < this.h
+  inBounds(x, y) {
+    return (
+      Number.isInteger(x) &&
+      Number.isInteger(y) &&
+      x >= 0 &&
+      x < this.w &&
+      y >= 0 &&
+      y < this.h
+    );
   }
 
-  this.isAllowed = function (g) {
-    return g === '.' || !!library[`${g}`.toLowerCase()]
+  isAllowed(g) {
+    return g === "." || !!library[`${g}`.toLowerCase()];
   }
 
-  this.isSpecial = function (g) {
-    return g.toLowerCase() === g.toUpperCase() && isNaN(g)
+  isSpecial(g) {
+    return g.toLowerCase() === g.toUpperCase() && Number.isNaN(g);
   }
 
-  this.keyOf = function (val, uc = false) {
-    return uc === true ? this.keys[val % 36].toUpperCase() : this.keys[val % 36]
+  keyOf(val, uc = false) {
+    return uc === true
+      ? this.keys[val % 36].toUpperCase()
+      : this.keys[val % 36];
   }
 
-  this.valueOf = function (g) {
-    return !g || g === '.' || g === '*' ? 0 : this.keys.indexOf(`${g}`.toLowerCase())
+  valueOf(g) {
+    return !g || g === "." || g === "*"
+      ? 0
+      : this.keys.indexOf(`${g}`.toLowerCase());
   }
 
-  this.indexAt = function (x, y) {
-    return this.inBounds(x, y) === true ? x + (this.w * y) : -1
+  indexAt(x, y) {
+    return this.inBounds(x, y) === true ? x + this.w * y : -1;
   }
 
-  this.operatorAt = function (x, y) {
-    return this.runtime.filter((item) => { return item.x === x && item.y === y })[0]
+  operatorAt(x, y) {
+    return this.runtime.filter((item) => {
+      return item.x === x && item.y === y;
+    })[0];
   }
 
-  this.posAt = function (index) {
-    return { x: index % this.w, y: parseInt(index / this.w) }
+  posAt(index) {
+    return { x: index % this.w, y: Math.floor(index / this.w) };
   }
 
-  this.glyphAt = function (x, y) {
-    return this.s.charAt(this.indexAt(x, y))
+  glyphAt(x, y) {
+    return this.s.charAt(this.indexAt(x, y));
   }
 
-  this.valueAt = function (x, y) {
-    return this.valueOf(this.glyphAt(x, y))
+  valueAt(x, y) {
+    return this.valueOf(this.glyphAt(x, y));
   }
 
-  this.lockAt = function (x, y) {
-    return this.locks[this.indexAt(x, y)] === true
+  lockAt(x, y) {
+    return this.locks[this.indexAt(x, y)] === true;
   }
 
-  this.valueIn = function (key) {
-    return this.variables[key] || '.'
+  valueIn(key) {
+    return this.variables[key] || ".";
   }
 
   // Tools
-
-  this.format = () => {
-    const a = []
+  format() {
+    const a = [];
     for (let y = 0; y < this.h; y++) {
-      a.push(this.s.substr(y * this.w, this.w))
+      a.push(this.s.substr(y * this.w, this.w));
     }
     return a.reduce((acc, val) => {
-      return `${acc}${val}\n`
-    }, '')
+      return `${acc}${val}\n`;
+    }, "");
   }
 
-  this.length = () => {
-    return this.strip().length
+  length() {
+    return this.strip().length;
   }
 
-  this.strip = () => {
-    return this.s.replace(/[^a-zA-Z0-9+]+/gi, '').trim()
+  strip() {
+    return this.s.replace(/[^a-zA-Z0-9+]+/gi, "").trim();
   }
 
-  this.toString = () => {
-    return this.format().trim()
+  toString() {
+    return this.format().trim();
   }
 
-  this.toRect = (str = this.s) => {
-    const lines = str.trim().split(/\r?\n/)
-    return { x: lines[0].length, y: lines.length }
+  toRect(str = this.s) {
+    const lines = str.trim().split(/\r?\n/);
+    return { x: lines[0].length, y: lines.length };
   }
-
-  this.reset()
 }

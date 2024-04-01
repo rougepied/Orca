@@ -41,8 +41,6 @@
       "performance",
       "Worker"
     ],
-    "ignore": [
-      "/node_modules/*"
-    ]
+    "ignore": ["/node_modules/*"]
   }
 }

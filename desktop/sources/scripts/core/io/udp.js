@@ -1,5 +1,24 @@
-'use strict'
+//@ts-check
 
+export class Udp {
+  client;
+
+  constructor(client) {
+    this.client = client;
+  }
+
+  start() {
+    
+  }
+  clear() {
+    
+  }
+  run () {
+    
+  }
+}
+
+/*
 function Udp (client) {
   const dgram = require('dgram')
 
@@ -70,3 +89,4 @@ function Udp (client) {
     this.listener.bind(port)
   }
 }
+*/

@@ -17,7 +17,7 @@ const createWindow = () => {
       __dirname,
       { darwin: "icon.icns", linux: "icon.png", win32: "icon.ico" }[
         process.platform
-      ] || "icon.ico"
+      ] || "icon.ico",
     ),
     resizable: true,
     frame: process.platform !== "darwin",
@@ -30,17 +30,17 @@ const createWindow = () => {
       backgroundThrottling: false,
     },
   });
-  
+
   win.loadURL(`file://${__dirname}/sources/index.html`);
 
   win.on("closed", () => {
     app.quit();
   });
-  
+
   win.on("hide", function () {
     isShown = false;
   });
-  
+
   win.on("show", function () {
     isShown = true;
   });
@@ -48,7 +48,6 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   // app.inspect()
-
 
   app.on("window-all-closed", () => {
     app.quit();
