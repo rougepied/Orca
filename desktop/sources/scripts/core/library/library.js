@@ -1,36 +1,13 @@
 //@ts-check
 
-import { Operator } from "./operator.js";
-import { Orca } from "./orca.js";
+import { OperatorA } from "./operator-a.js";
+import { Operator } from "../operator.js";
 
 /* global client */
 
 export const library = {};
 
-library.a = class OperatorA extends Operator {
-  /**
-   * @param {Orca} orca
-   * @param {*} x
-   * @param {*} y
-   * @param {*} passive
-   */
-  constructor(orca, x, y, passive) {
-    super(orca, x, y, "a", passive);
-
-    this.name = "add";
-    this.info = "Outputs sum of inputs";
-
-    this.ports.a = { x: -1, y: 0 };
-    this.ports.b = { x: 1, y: 0 };
-    this.ports.output = { x: 0, y: 1, sensitive: true, output: true };
-  }
-
-  operation(force = false) {
-    const a = this.listen(this.ports.a, true);
-    const b = this.listen(this.ports.b, true);
-    return this.orca.keyOf(a + b);
-  }
-};
+library.a = OperatorA;
 
 library.b = class OperatorB extends Operator {
   constructor(orca, x, y, passive) {
@@ -371,7 +348,9 @@ library.r = class OperatorR extends Operator {
   operation(force = false) {
     const min = this.listen(this.ports.min, true);
     const max = this.listen(this.ports.max, true);
-    const val = Number.parseInt(Math.random() * ((max > 0 ? max : 36) - min) + min);
+    const val = Number.parseInt(
+      Math.random() * ((max > 0 ? max : 36) - min) + min,
+    );
     return this.orca.keyOf(val);
   }
 };
@@ -604,7 +583,7 @@ library.$ = class OperatorSelf extends Operator {
     this.orca.client.commander.trigger(
       `${msg}`,
       { x: this.x, y: this.y + 1 },
-      false
+      false,
     );
   }
 };

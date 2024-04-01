@@ -7,15 +7,9 @@ export class Udp {
     this.client = client;
   }
 
-  start() {
-    
-  }
-  clear() {
-    
-  }
-  run () {
-    
-  }
+  start() {}
+  clear() {}
+  run() {}
 }
 
 /*

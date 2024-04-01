@@ -1,6 +1,5 @@
-
 /**
- * 
+ *
  * @param {Number} v a number to be limited
  * @param {Number} min the minimal value to return
  * @param {Number} max the maximal value to return

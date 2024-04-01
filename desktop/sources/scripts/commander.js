@@ -206,11 +206,9 @@ export class Commander {
   }
 
   /**
-   * 
-   * @param {*} msg 
-   * @param {{ x: Number, y: Number } | null} origin 
-   * @param {boolean} stopping 
-   * @returns 
+   * @param {*} msg
+   * @param {{ x: Number, y: Number } | null} origin
+   * @param {boolean} stopping
    */
   trigger(msg = this.query, origin = null, stopping = true) {
     const cmd = `${msg}`.split(":")[0].trim().replace(/\W/g, "").toLowerCase();

@@ -1,15 +1,14 @@
 //@ts-check
 
 import { clamp } from "../clamp.js";
-import { Orca } from "./orca.js";
 
 export class Operator {
   /**
-   * @param {Orca} orca 
-   * @param {*} x 
-   * @param {*} y 
-   * @param {*} glyph 
-   * @param {*} passive 
+   * @param {import("./orca.js").Orca} orca
+   * @param {*} x
+   * @param {*} y
+   * @param {*} glyph
+   * @param {*} passive
    */
   constructor(orca, x, y, glyph = ".", passive = false) {
     this.orca = orca;
@@ -31,8 +30,8 @@ export class Operator {
     const g = this.orca.glyphAt(this.x + port.x, this.y + port.y);
     const glyph = (g === "." || g === "*") && port.default ? port.default : g;
     if (toValue) {
-      const min = port.clamp && port.clamp.min ? port.clamp.min : 0;
-      const max = port.clamp && port.clamp.max ? port.clamp.max : 36;
+      const min = port.clamp?.min ?? 0;
+      const max = port.clamp?.max ?? 36;
       return clamp(this.orca.valueOf(glyph), min, max);
     }
     return glyph;
@@ -49,7 +48,7 @@ export class Operator {
     this.orca.write(
       this.x + port.x,
       this.y + port.y,
-      this.shouldUpperCase() === true ? `${g}`.toUpperCase() : g
+      this.shouldUpperCase() === true ? `${g}`.toUpperCase() : g,
     );
   }
 
@@ -61,7 +60,7 @@ export class Operator {
     this.orca.write(
       this.x + this.ports.output.x,
       this.y + this.ports.output.y,
-      b ? "*" : "."
+      b ? "*" : ".",
     );
     this.orca.lock(this.x + this.ports.output.x, this.y + this.ports.output.y);
   }

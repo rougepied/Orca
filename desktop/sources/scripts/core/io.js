@@ -23,38 +23,38 @@ export class IO {
     this.cc = new MidiCC(client);
     this.mono = new Mono(client);
     this.osc = undefined;
-  //  this.udp = new Udp(client);
-  //  this.osc = new Osc(client);
+    //  this.udp = new Udp(client);
+    //  this.osc = new Osc(client);
   }
 
   start() {
     this.midi.start();
     this.cc.start();
     this.mono.start();
-//    this.udp.start();
-//    this.osc.start();
+    //    this.udp.start();
+    //    this.osc.start();
     this.clear();
-  };
+  }
 
   clear() {
     this.midi.clear();
     this.cc.clear();
     this.mono.clear();
-//    this.udp.clear();
-//    this.osc.clear();
-  };
+    //    this.udp.clear();
+    //    this.osc.clear();
+  }
 
   run() {
     this.midi.run();
     this.cc.run();
     // this.mono.run();
     // this.udp.run();
-  };
+  }
 
   silence() {
     this.midi.silence();
     this.mono.silence();
-  };
+  }
 
   setIp(addr = "127.0.0.1") {
     if (validateIP(addr) !== true && addr.indexOf(".local") === -1) {
@@ -64,17 +64,15 @@ export class IO {
     this.ip = addr;
     console.log("IO", `Set target IP to ${this.ip}`);
     // this.osc.setup();
-  };
+  }
 
   length() {
     return (
-      this.midi.length() +
-      this.mono.length() +
-      this.cc.stack.length //+
+      this.midi.length() + this.mono.length() + this.cc.stack.length //+
       // this.udp.stack.length +
       // this.osc.stack.length
     );
-  };
+  }
 
   inspect(limit = this.client.grid.w) {
     let text = "";
@@ -82,7 +80,7 @@ export class IO {
       text += "|";
     }
     return fill(text, limit, ".");
-  };
+  }
 }
 function validateIP(addr) {
   return !!/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(

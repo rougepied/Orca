@@ -1,6 +1,6 @@
 //@ts-check
 
-import { library } from "./core/library.js";
+import { library } from "./core/library/library.js";
 import { Acels } from "./lib/acels.js";
 import { Theme } from "./lib/theme.js";
 import { Source } from "./lib/source.js";

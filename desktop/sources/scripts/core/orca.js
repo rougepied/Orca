@@ -1,6 +1,6 @@
 //@ts-check
 import { Client } from "../client.js";
-import { library } from "./library.js";
+import { library } from "./library/library.js";
 
 export class Orca {
   /**
